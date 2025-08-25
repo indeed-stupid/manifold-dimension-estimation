@@ -9,17 +9,17 @@ The code implements various algorithms and tools for estimating the intrinsic di
 
 ## 🗂️ File Descriptions
 
-| File | Description |
-|------|-------------|
+| File(s) | Description |
+|---------|-------------|
 | `mymodules.py` | Implementation of manifolds and estimators. |
 | `run_nbh_new.py` | Benchmark Dimension Estimates versus Neighborhood Sizes. |
 | `run_n_new.py` | Benchmark Dimension Estimates versus Sample Sizes. |
 | `run_p_new.py` | Benchmark Dimension Estimates versus Ambient Dimensions. |
 | `run_noise_new.py` | Benchmark Dimension Estimates versus Gaussian Noise. |
-| `run_curvarture_01_new.py, run_curvarture_02_new.py, run_curvarture_03_new.py` | Benchmark Dimension Estimates versus Different Aspects of Curvature. |
+| - `run_curvarture_01_new.py`<br>- `run_curvarture_02_new.py`<br>- `run_curvarture_03_new.py` | Benchmark Dimension Estimates versus Different Aspects of Curvature. |
 | `run_nc_new.py` | Demonstrate Noise-Curvature Dilemma Effect. |
-| `run_new_uniform_500.py, run_new_uniform_2000.py, run_new_nonuniform_500.py, run_new_nonuniform_2000.py, run_new_noise_500.py, run_new_noise_2000.py` | Compare Dimension Estimates across Simulated Datasets. |
-| `run_isomap.py, run_mnist.py, run_isolet.py` | Compare Dimension Estimates across Real-world Datasets. |
+| - `run_new_uniform_500.py`<br>- `run_new_uniform_2000.py`<br>- `run_new_nonuniform_500.py`<br>- `run_new_nonuniform_2000.py`<br>- `run_new_noise_500.py`<br>- `run_new_noise_2000.py` | Compare Dimension Estimates across Simulated Datasets. |
+| - `run_isomap.py`<br>- `run_mnist.py`<br>- `run_isolet.py` | Compare Dimension Estimates across Real-world Datasets. |
 
 ## 📚 Related Publications
 

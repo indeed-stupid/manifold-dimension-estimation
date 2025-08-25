@@ -20,6 +20,7 @@ The code implements various algorithms and tools for estimating the intrinsic di
 | `run_nc_new.py` | Demonstrate Noise-Curvature Dilemma Effect. |
 | - `run_new_uniform_500.py`<br>- `run_new_uniform_2000.py`<br>- `run_new_nonuniform_500.py`<br>- `run_new_nonuniform_2000.py`<br>- `run_new_noise_500.py`<br>- `run_new_noise_2000.py` | Compare Dimension Estimates across Simulated Datasets. |
 | - `run_isomap.py`<br>- `run_mnist.py`<br>- `run_isolet.py` | Compare Dimension Estimates across Real-world Datasets. |
+| `notebook.ipynb` | Jupyter Notebook for Generating Graphs and Tables. |
 
 ## 📚 Related Publications
 

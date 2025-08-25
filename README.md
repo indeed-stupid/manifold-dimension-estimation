@@ -11,14 +11,15 @@ The code implements various algorithms and tools for estimating the intrinsic di
 
 | File | Description |
 |------|-------------|
-| `main.py` | Entry point to run the core experiments or evaluations. |
-| `pca_estimator.py` | Implements PCA-based dimension estimation. |
-| `mle_estimator.py` | Contains Maximum Likelihood Estimation (MLE) based methods. |
-| `quadratic_embedding.py` | Implements the curvature-aware quadratic embedding method introduced in the second paper. |
-| `utils.py` | Helper functions for distance computations, data normalization, etc. |
-| `manifold_datasets.py` | Generates or loads synthetic and real-world manifold datasets. |
-| `evaluation_metrics.py` | Provides functions to evaluate and compare estimators. |
-| `visualization.py` | Optional plotting and visualization utilities for results. |
+| `mymodules.py` | Implementation of manifolds and estimators. |
+| `run_nbh_new.py` | Benchmark Dimension Estimates versus Neighborhood Sizes. |
+| `run_n_new.py` | Benchmark Dimension Estimates versus Sample Sizes. |
+| `run_p_new.py` | Benchmark Dimension Estimates versus Ambient Dimensions. |
+| `run_noise_new.py` | Benchmark Dimension Estimates versus Gaussian Noise. |
+| `run_curvarture_01_new.py, run_curvarture_02_new.py, run_curvarture_03_new.py` | Benchmark Dimension Estimates versus Different Aspects of Curvature. |
+| `run_nc_new.py` | Demonstrate Noise-Curvature Dilemma Effect. |
+| `run_new_uniform_500.py, run_new_uniform_2000.py, run_new_nonuniform_500.py, run_new_nonuniform_2000.py, run_new_noise_500.py, run_new_noise_2000.py` | Compare Dimension Estimates across Simulated Datasets. |
+| `run_isomap.py, run_mnist.py, run_isolet.py` | Compare Dimension Estimates across Real-world Datasets. |
 
 ## 📚 Related Publications
 

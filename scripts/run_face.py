@@ -4,9 +4,9 @@ from scipy.io import loadmat
 
 global_start_time = time.time()
 alphas = [1.01, 1.2, 1.4, 1.6, 1.8, 2, 4, 6, 8, 10]
-Ks = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+Ks = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
 Ks_DanCo = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
-ps = [784]
+ps = [4096]
 if True:
     hp_01 = np.zeros((18, 10))
     hp_02 = np.zeros((18, 10))
@@ -27,12 +27,9 @@ if True:
     num = 0
     for _type in [0]:
         if _type == 0:
-            data = np.genfromtxt('mnist_train.csv', delimiter=',', skip_header=1)
-            # First column is label
-            labels = data[:, 0]
-            images = data[:, 1:]
-            # Select only rows where label == 1
-            sample = images[labels == 1]
+            _data = loadmat('isomap.mat')
+            images = _data['images']  # shape likely (pixels, samples)
+            sample = images.T
             n = int(sample.shape[0])
         for count in range(10):
             # try:
@@ -154,6 +151,7 @@ if True:
     ds_12 = np.zeros((18, 100))
     ds_13 = np.zeros((18, 100))
     ds_14 = np.zeros((18, 100))
+    ds_14 = np.zeros((18, 100))
     ds_15 = np.zeros((18, 100))
 
     ranges = np.zeros((15, 36)) # one row per estimator, two bounds for every manifold, now the other way around!
@@ -205,12 +203,9 @@ if True:
     
         for index in [0]:
             if _type == 0:
-                data = np.genfromtxt('mnist_train.csv', delimiter=',', skip_header=1)
-                # First column is label
-                labels = data[:, 0]
-                images = data[:, 1:]
-                # Select only rows where label == 1
-                sample = images[labels == 1]
+                _data = loadmat('isomap.mat')
+                images = _data['images']  # shape likely (pixels, samples)
+                sample = images.T
                 n = int(sample.shape[0])
             
             for estimator in [12, 13, 14]:
@@ -327,21 +322,21 @@ if True:
                 print(n, estimator, np.mean(dim))
 
 
-    np.savetxt("mnist_01.csv", ds_01, delimiter=",")
-    np.savetxt("mnist_02.csv", ds_02, delimiter=",")
-    np.savetxt("mnist_03.csv", ds_03, delimiter=",")
-    np.savetxt("mnist_04.csv", ds_04, delimiter=",")
-    np.savetxt("mnist_05.csv", ds_05, delimiter=",")
-    np.savetxt("mnist_06.csv", ds_06, delimiter=",")
-    np.savetxt("mnist_07.csv", ds_07, delimiter=",")
-    np.savetxt("mnist_08.csv", ds_08, delimiter=",")
-    np.savetxt("mnist_09.csv", ds_09, delimiter=",")
-    np.savetxt("mnist_10.csv", ds_10, delimiter=",")
-    np.savetxt("mnist_11.csv", ds_11, delimiter=",")
-    np.savetxt("mnist_12.csv", ds_12, delimiter=",")
-    np.savetxt("mnist_16.csv", ds_13, delimiter=",")
-    np.savetxt("mnist_17.csv", ds_14, delimiter=",")
-    np.savetxt("mnist_15.csv", ds_15, delimiter=",")
+    np.savetxt("images_01.csv", ds_01, delimiter=",")
+    np.savetxt("images_02.csv", ds_02, delimiter=",")
+    np.savetxt("images_03.csv", ds_03, delimiter=",")
+    np.savetxt("images_04.csv", ds_04, delimiter=",")
+    np.savetxt("images_05.csv", ds_05, delimiter=",")
+    np.savetxt("images_06.csv", ds_06, delimiter=",")
+    np.savetxt("images_07.csv", ds_07, delimiter=",")
+    np.savetxt("images_08.csv", ds_08, delimiter=",")
+    np.savetxt("images_09.csv", ds_09, delimiter=",")
+    np.savetxt("images_10.csv", ds_10, delimiter=",")
+    np.savetxt("images_11.csv", ds_11, delimiter=",")
+    np.savetxt("images_12.csv", ds_12, delimiter=",")
+    np.savetxt("images_16.csv", ds_13, delimiter=",")
+    np.savetxt("images_17.csv", ds_14, delimiter=",")
+    np.savetxt("images_15.csv", ds_15, delimiter=",")
 
 global_end_time = time.time()
 print(global_end_time - global_start_time)

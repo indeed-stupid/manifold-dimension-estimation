@@ -13,6 +13,8 @@ if True:
     ds_09 = np.zeros((10, 100))
     ds_10 = np.zeros((10, 100))
     ds_15 = np.zeros((10, 100))
+    ds_16 = np.zeros((10, 100))
+    ds_17 = np.zeros((10, 100))
     ds = {
         0:ds_01,
         1:ds_02,
@@ -24,7 +26,9 @@ if True:
         7:ds_08,
         8:ds_09,
         9:ds_10,
-        14:ds_15
+        14:ds_15,
+        15:ds_16,
+        16:ds_17
     }
     num = 0
     d = 3
@@ -36,18 +40,50 @@ if True:
         for index in range(0, 100):
             sampler = CosSinSampler(n=n, d=d, k=R, sigma=0, seed=index, uniform=True)
             sample = sampler.sample()
-            for estimator in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 14]:
+            for estimator in [14, 15, 16]:
                 dim = []
                 
                 if estimator == 14:
                     try:
-                        dim.append(CAPCA(p, n, K, sample))
+                        temp = CAPCA(p, n, K, sample)
+                        dim.append(temp)
                     except Exception as e:
                         print(e)
                         while True:
                             try:
                                 data = sample + np.random.normal(0, 1e-12, size=sample.shape)
-                                dim.append(CAPCA(p, n, K, data))
+                                temp = CAPCA(p, n, K, data)
+                                dim.append(temp)
+                                print("correction success")
+                                break
+                            except Exception as e:
+                                print("correction failure")
+                                continue 
+                    
+                if estimator == 15:
+                    try:
+                        dim.append(q_estimator_parallel_v13(p, n, K, sample, num_neighborhoods=n))
+                    except Exception as e:
+                        print(e)
+                        while True:
+                            try:
+                                data = sample + np.random.normal(0, 1e-12, size=sample.shape)
+                                dim.append(q_estimator_parallel_v13(p, n, K, data, num_neighborhoods=n))
+                                print("correction success")
+                                break
+                            except Exception as e:
+                                print("correction failure")
+                                continue
+                    
+                if estimator == 16:
+                    try:
+                        dim.append(tls_estimator_parallel_v14(p, n, K, sample, num_neighborhoods=n))
+                    except Exception as e:
+                        print(e)
+                        while True:
+                            try:
+                                data = sample + np.random.normal(0, 1e-12, size=sample.shape)
+                                dim.append(tls_estimator_parallel_v14(p, n, K, data, num_neighborhoods=n))
                                 print("correction success")
                                 break
                             except Exception as e:
@@ -133,5 +169,7 @@ if True:
     np.savetxt("c01_09.csv", ds_09, delimiter=",")
     np.savetxt("c01_10.csv", ds_10, delimiter=",")
     np.savetxt("c01_15.csv", ds_15, delimiter=",")
+    np.savetxt("c01_16.csv", ds_16, delimiter=",")
+    np.savetxt("c01_17.csv", ds_17, delimiter=",")
 global_end_time = time.time()
 print(global_end_time - global_start_time)

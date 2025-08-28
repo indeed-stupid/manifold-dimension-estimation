@@ -36,48 +36,48 @@ if True:
             y = data[:, -1].astype(int) 
             n = int(sample.shape[0])
         for count in range(10):
-            try:
-                lPCA = skdim.id.lPCA(ver='FO').fit_transform_pw(sample, n_neighbors = Ks[count], n_jobs=-1)
-                hp_01[_type, count] = np.mean(lPCA)
-            except Exception as e:
-                print(e)
-                while True:
-                    try:
-                        data = sample + np.random.normal(0, 1e-12, size=sample.shape)
-                        lPCA = skdim.id.lPCA(ver='FO').fit_transform_pw(data, n_neighbors = Ks[count], n_jobs=-1)
-                        hp_01[_type, count] = np.mean(lPCA)
-                        print("correction success")
-                        break
-                    except Exception as e:
-                        print("correction failure")
-                        continue
-            
-            MLE = skdim.id.MLE().fit_transform_pw(sample, n_neighbors = Ks[count], n_jobs=-1)
-            hp_02[_type, count] = np.mean(MLE)
-            
             # try:
-                # DanCo = skdim.id.DANCo(k=Ks_DanCo[count]).fit(sample)
-                # hp_03[_type, count] = DanCo.dimension_
+                # lPCA = skdim.id.lPCA(ver='FO').fit_transform_pw(sample, n_neighbors = Ks[count], n_jobs=-1)
+                # hp_01[_type, count] = np.mean(lPCA)
             # except Exception as e:
                 # print(e)
                 # while True:
                     # try:
                         # data = sample + np.random.normal(0, 1e-12, size=sample.shape)
-                        # DanCo = skdim.id.DANCo(k=Ks_DanCo[count]).fit(data)
-                        # hp_03[_type, count] = DanCo.dimension_
+                        # lPCA = skdim.id.lPCA(ver='FO').fit_transform_pw(data, n_neighbors = Ks[count], n_jobs=-1)
+                        # hp_01[_type, count] = np.mean(lPCA)
                         # print("correction success")
                         # break
                     # except Exception as e:
                         # print("correction failure")
                         # continue
+            
+            # MLE = skdim.id.MLE().fit_transform_pw(sample, n_neighbors = Ks[count], n_jobs=-1)
+            # hp_02[_type, count] = np.mean(MLE)
+            
+            # # try:
+                # # DanCo = skdim.id.DANCo(k=Ks_DanCo[count]).fit(sample)
+                # # hp_03[_type, count] = DanCo.dimension_
+            # # except Exception as e:
+                # # print(e)
+                # # while True:
+                    # # try:
+                        # # data = sample + np.random.normal(0, 1e-12, size=sample.shape)
+                        # # DanCo = skdim.id.DANCo(k=Ks_DanCo[count]).fit(data)
+                        # # hp_03[_type, count] = DanCo.dimension_
+                        # # print("correction success")
+                        # # break
+                    # # except Exception as e:
+                        # # print("correction failure")
+                        # # continue
         
-            MADA = skdim.id.MADA().fit_transform_pw(sample, n_neighbors=Ks[count], n_jobs=-1)
-            hp_04[_type, count] = np.mean(MADA)
-            TLE = skdim.id.TLE().fit_transform_pw(sample, n_neighbors=Ks[count], n_jobs=-1)
-            hp_05[_type, count] = np.mean(TLE)
-            hp_07[_type, count] = ESS(-1, ps[_type], n, Ks[count], sample)
-            hp_08[_type, count] = ABID(-1, ps[_type], n, Ks[count], sample)
-            hp_09[_type, count] = Wasserstein_new(-1, ps[_type], n, -1, sample, alphas[count])         
+            # MADA = skdim.id.MADA().fit_transform_pw(sample, n_neighbors=Ks[count], n_jobs=-1)
+            # hp_04[_type, count] = np.mean(MADA)
+            # TLE = skdim.id.TLE().fit_transform_pw(sample, n_neighbors=Ks[count], n_jobs=-1)
+            # hp_05[_type, count] = np.mean(TLE)
+            # hp_07[_type, count] = ESS(-1, ps[_type], n, Ks[count], sample)
+            # hp_08[_type, count] = ABID(-1, ps[_type], n, Ks[count], sample)
+            # hp_09[_type, count] = Wasserstein_new(-1, ps[_type], n, -1, sample, alphas[count])         
         
             try:
                 hp_13[_type, count] = q_estimator_parallel_v13(ps[_type], n, Ks_extra[count], sample, num_neighborhoods=n)
@@ -96,14 +96,14 @@ if True:
         
         
             try:
-                hp_14[_type, count] = tls_estimator_parallel_v13(ps[_type], n, Ks_extra[count], sample, num_neighborhoods=n)
+                hp_14[_type, count] = tls_estimator_parallel_v14(ps[_type], n, Ks_extra[count], sample, num_neighborhoods=n)
                 print(hp_14[_type, count])
             except Exception as e:
                 print(e)
                 while True:
                     try:
                         data = sample + np.random.normal(0, 1e-12, size=sample.shape)
-                        hp_14[_type, count] = tls_estimator_parallel_v13(ps[_type], n, Ks_extra[count], data, num_neighborhoods=n)
+                        hp_14[_type, count] = tls_estimator_parallel_v14(ps[_type], n, Ks_extra[count], data, num_neighborhoods=n)
                         print("correction success")
                         break
                     except Exception as e:
@@ -216,7 +216,7 @@ if True:
                 y = data[:, -1].astype(int) 
                 n = int(sample.shape[0])
             
-            for estimator in [0, 1, 3, 4, 5, 6, 8, 12, 13, 14]:
+            for estimator in [12, 13, 14]:
                 dim = []
                 
                 if estimator == 2:
@@ -297,13 +297,13 @@ if True:
                     
                     if estimator == 13:
                         try:
-                            dim.append(tls_estimator_parallel_v13(ps[_type], n, K, sample, num_neighborhoods=n))
+                            dim.append(tls_estimator_parallel_v14(ps[_type], n, K, sample, num_neighborhoods=n))
                         except Exception as e:
                             print(e)
                             while True:
                                 try:
                                     data = sample + np.random.normal(0, 1e-12, size=sample.shape)
-                                    dim.append(tls_estimator_parallel_v13(ps[_type], n, K, data, num_neighborhoods=n))
+                                    dim.append(tls_estimator_parallel_v14(ps[_type], n, K, data, num_neighborhoods=n))
                                     print("correction success")
                                     break
                                 except Exception as e:
@@ -344,8 +344,8 @@ if True:
     np.savetxt("isolet_10.csv", ds_10, delimiter=",")
     np.savetxt("isolet_11.csv", ds_11, delimiter=",")
     np.savetxt("isolet_12.csv", ds_12, delimiter=",")
-    np.savetxt("isolet_13.csv", ds_13, delimiter=",")
-    np.savetxt("isolet_14.csv", ds_14, delimiter=",")
+    np.savetxt("isolet_16.csv", ds_13, delimiter=",")
+    np.savetxt("isolet_17.csv", ds_14, delimiter=",")
     np.savetxt("isolet_15.csv", ds_15, delimiter=",")
 
 global_end_time = time.time()

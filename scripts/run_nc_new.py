@@ -1,5 +1,6 @@
 from mymodules import *
 
+# d: individual - intrinsic dimension, sphere
 global_start_time = time.time()
 if True:
     ds_01 = np.zeros((10, 100))
@@ -15,6 +16,7 @@ if True:
     ds_15 = np.zeros((10, 100))
     ds_16 = np.zeros((10, 100))
     ds_17 = np.zeros((10, 100))
+    
     ds = {
         0:ds_01,
         1:ds_02,
@@ -31,15 +33,64 @@ if True:
         16:ds_17
     }
     num = 0
-    d = 5
-    for p in [d + 1] + [i * d for i in range(2, 11)]:
+    for noise_sigma in range(10):
+        R = 0.1
+        d = 5
         n = 1000
+        p = 2 * d
         K = 100
         for index in range(0, 100):
-            sampler = SphereSampler(n=n, d=d, p=p, R=1, seed=index, sigma = 0.0)
+            sampler = SphereSampler(n=n, d=d, p=p, R=R, seed=index, sigma = 0.01 * noise_sigma)
             sample = sampler.sample_fast()
             for estimator in [14, 15, 16]:
                 dim = []
+                
+                if estimator == 14:
+                    try:
+                        temp = CAPCA(p, n, K, sample)
+                        dim.append(temp)
+                    except Exception as e:
+                        print(e)
+                        while True:
+                            try:
+                                data = sample + np.random.normal(0, 1e-12, size=sample.shape)
+                                temp = CAPCA(p, n, K, data)
+                                dim.append(temp)
+                                print("correction success")
+                                break
+                            except Exception as e:
+                                print("correction failure")
+                                continue 
+                    
+                if estimator == 15:
+                    try:
+                        dim.append(q_estimator_parallel_v13(p, n, K, sample, num_neighborhoods=n))
+                    except Exception as e:
+                        print(e)
+                        while True:
+                            try:
+                                data = sample + np.random.normal(0, 1e-12, size=sample.shape)
+                                dim.append(q_estimator_parallel_v13(p, n, K, data, num_neighborhoods=n))
+                                print("correction success")
+                                break
+                            except Exception as e:
+                                print("correction failure")
+                                continue
+                    
+                if estimator == 16:
+                    try:
+                        dim.append(tls_estimator_parallel_v14(p, n, K, sample, num_neighborhoods=n))
+                    except Exception as e:
+                        print(e)
+                        while True:
+                            try:
+                                data = sample + np.random.normal(0, 1e-12, size=sample.shape)
+                                dim.append(tls_estimator_parallel_v14(p, n, K, data, num_neighborhoods=n))
+                                print("correction success")
+                                break
+                            except Exception as e:
+                                print("correction failure")
+                                continue
                 
                 if estimator == 0:
                     try:
@@ -101,70 +152,23 @@ if True:
                     
                 if estimator == 9:
                     dim.append(np.mean(ISOMAP(-1, p, n, -1, sample)))
-                    
-                if estimator == 14:
-                    try:
-                        temp = CAPCA(p, n, K, sample)
-                        dim.append(temp)
-                    except Exception as e:
-                        print(e)
-                        while True:
-                            try:
-                                data = sample + np.random.normal(0, 1e-12, size=sample.shape)
-                                temp = CAPCA(p, n, K, data)
-                                dim.append(temp)
-                                print("correction success")
-                                break
-                            except Exception as e:
-                                print("correction failure")
-                                continue 
-                    
-                if estimator == 15:
-                    try:
-                        dim.append(q_estimator_parallel_v13(p, n, K, sample, num_neighborhoods=n))
-                    except Exception as e:
-                        print(e)
-                        while True:
-                            try:
-                                data = sample + np.random.normal(0, 1e-12, size=sample.shape)
-                                dim.append(q_estimator_parallel_v13(p, n, K, data, num_neighborhoods=n))
-                                print("correction success")
-                                break
-                            except Exception as e:
-                                print("correction failure")
-                                continue
-                    
-                if estimator == 16:
-                    try:
-                        dim.append(tls_estimator_parallel_v14(p, n, K, sample, num_neighborhoods=n))
-                    except Exception as e:
-                        print(e)
-                        while True:
-                            try:
-                                data = sample + np.random.normal(0, 1e-12, size=sample.shape)
-                                dim.append(tls_estimator_parallel_v14(p, n, K, data, num_neighborhoods=n))
-                                print("correction success")
-                                break
-                            except Exception as e:
-                                print("correction failure")
-                                continue
                 
                 ds[estimator][num, index] = np.mean(dim)
                 print(n, d, estimator, np.mean(dim))
         num += 1
 
-    np.savetxt("p_01.csv", ds_01, delimiter=",")
-    np.savetxt("p_02.csv", ds_02, delimiter=",")
-    np.savetxt("p_03.csv", ds_03, delimiter=",")
-    np.savetxt("p_04.csv", ds_04, delimiter=",")
-    np.savetxt("p_05.csv", ds_05, delimiter=",")
-    np.savetxt("p_06.csv", ds_06, delimiter=",")
-    np.savetxt("p_07.csv", ds_07, delimiter=",")
-    np.savetxt("p_08.csv", ds_08, delimiter=",")
-    np.savetxt("p_09.csv", ds_09, delimiter=",")
-    np.savetxt("p_10.csv", ds_10, delimiter=",")
-    np.savetxt("p_15.csv", ds_15, delimiter=",")
-    np.savetxt("p_16.csv", ds_16, delimiter=",")
-    np.savetxt("p_17.csv", ds_17, delimiter=",")
+    np.savetxt("noise_curvature_01.csv", ds_01, delimiter=",")
+    np.savetxt("noise_curvature_02.csv", ds_02, delimiter=",")
+    np.savetxt("noise_curvature_03.csv", ds_03, delimiter=",")
+    np.savetxt("noise_curvature_04.csv", ds_04, delimiter=",")
+    np.savetxt("noise_curvature_05.csv", ds_05, delimiter=",")
+    np.savetxt("noise_curvature_06.csv", ds_06, delimiter=",")
+    np.savetxt("noise_curvature_07.csv", ds_07, delimiter=",")
+    np.savetxt("noise_curvature_08.csv", ds_08, delimiter=",")
+    np.savetxt("noise_curvature_09.csv", ds_09, delimiter=",")
+    np.savetxt("noise_curvature_10.csv", ds_10, delimiter=",")
+    np.savetxt("noise_curvature_15.csv", ds_15, delimiter=",")
+    np.savetxt("noise_curvature_16.csv", ds_16, delimiter=",")
+    np.savetxt("noise_curvature_17.csv", ds_17, delimiter=",")
 global_end_time = time.time()
 print(global_end_time - global_start_time)

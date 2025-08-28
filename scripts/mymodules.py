@@ -620,10 +620,127 @@ def tls_estimator_parallel_v13(p, n, K, sample, n_jobs=-1, batch_size=None, num_
     
     return final_estimated_dim
 
-def CAPCA(p, n, K, sample):
+# total least squares
+def compute_dimension_tls_v14(k, data, indices, K, p):
+    neighbors = data[indices[k, 0:K]]
+    center = np.mean(neighbors, axis=0)
+    diff = neighbors - center
 
+    # PCA fit only on first p neighbors
+    pca = PCA(n_components=p)
+    pca.fit(diff[:K]) 
+    diff_pca = pca.transform(diff)  # Transform all K neighbors
+
+    # Determine active dimension index using only first p projected neighbors
+    stds = np.std(diff_pca[:p], axis=0)
+    index = next((p - 1 - j for j in range(p) if stds[p - 1 - j] > 1e-12), -1)
+
+    if index < 0:
+        return {'rss': []}
+    if index == 0:
+        return {'rss': [0.0]}
+
+    rss = []
+    n = diff_pca.shape[0]
+
+    for d in range(1, index + 1):
+        if d >= diff_pca.shape[1]:
+            continue
+
+        X = diff_pca[:, :d]
+        y = diff_pca[:, d]
+
+        # Build polynomial design matrix: linear, quadratic, cross terms
+        X_design = [X, X ** 2]
+        cross_terms = [X[:, i] * X[:, j] for i in range(d) for j in range(i + 1, d)]
+        if cross_terms:
+            X_design.append(np.stack(cross_terms, axis=1))
+        X_poly = np.hstack(X_design)
+
+        # Center predictors and response
+        X_poly_std = X_poly - np.mean(X_poly, axis=0)
+        y_std = y - np.mean(y)
+
+        # TLS: joint matrix
+        joint_matrix = np.hstack([X_poly_std, y_std[:, np.newaxis]])
+        U, S, Vt = np.linalg.svd(joint_matrix, full_matrices=False)
+        normal_vector = Vt[-1, :]  # Last row of V^T is the normal
+
+        residuals = joint_matrix @ normal_vector
+        rss_tls = np.sum(residuals ** 2)
+
+        complexity = 1 # 2 * d + (d * (d - 1)) // 2# heuristic weight
+        rss.append(complexity * rss_tls)
+    
+    return {'rss': rss}
+
+def process_tls_v14(batch_indices, data, indices, K, p):
+    return [compute_dimension_tls_v14(k, data, indices, K, p) for k in batch_indices]
+
+def tls_estimator_parallel_v14(p, n, K, sample, n_jobs=-1, batch_size=None, num_neighborhoods=100):
+    data = sample
+    knn_model = NearestNeighbors(n_neighbors=K + 1, algorithm='auto', n_jobs=n_jobs)
+    knn_model.fit(data)
+    _, indices = knn_model.kneighbors(data)
+
+    if K <= p * (p - 1) / 2 + 1: # we need K - (p - 1)p/2 - 1 > 0
+        val = (-1 + math.sqrt(1 + 8 * K)) / 2
+        if val.is_integer():
+            p = int(val) - 1
+        else:
+            p = math.floor(val)
+        print("Warning: ambient dimension is truncated, K might be too small.")
+
+    # Sample specified number of neighborhoods or all if less than requested
+    nbhs_to_use = np.random.choice(n, size=min(num_neighborhoods, n), replace=False)
+
+    if batch_size is None:
+        batch_size = max(10, len(nbhs_to_use) // (4 * os.cpu_count()))
+
+    batches = [nbhs_to_use[i: i + batch_size] for i in range(0, len(nbhs_to_use), batch_size)]
+
+    results = Parallel(n_jobs=n_jobs)(
+        delayed(process_tls_v14)(batch, data, indices, K, p) for batch in batches
+    )
+
+    flat_results = [r for batch in results for r in batch if r['rss']]
+
+    max_len = max(len(r['rss']) for r in flat_results)
+    all_rss = np.full((len(flat_results), max_len), np.nan)
+
+    for i, res in enumerate(flat_results):
+        all_rss[i, :len(res['rss'])] = res['rss']
+
+    estimated_dims = []
+
+    for rss in all_rss:
+        # Remove NaNs from the current RSS vector
+        valid_rss = rss[~np.isnan(rss)]
+        if len(valid_rss) < 2:
+            estimated_dims.append(1)
+            continue
+
+        # Compute relative decreases
+        rel_decreases = (valid_rss[:-1] - valid_rss[1:]) / valid_rss[:-1]
+
+        # Handle potential division by zero
+        rel_decreases = np.nan_to_num(rel_decreases, nan=0.0, posinf=0.0, neginf=0.0)
+
+        #print(rel_decreases)
+
+        # Get the index of the largest relative decrease
+        est_dim = np.argmax(rel_decreases) + 2  # +1 for 1-based indexing
+
+        estimated_dims.append(est_dim)
+    
+    # Take the average of all estimated dimensions
+    final_estimated_dim = np.mean(estimated_dims)
+    
+    return final_estimated_dim
+
+def CAPCA(p, n, K, sample):
     if p > K:
-        p = K # with K points, we can find at most K different directions
+        p = K  # can't extract more directions than points
 
     data = sample
     dimensions = np.zeros(n)
@@ -633,33 +750,41 @@ def CAPCA(p, n, K, sample):
     _, indices = knn_model.kneighbors(data)
 
     for k in range(n):
-        neighbors = data[indices[k, 0:K]]  # exclude self
+        neighbors = data[indices[k, 1:K+1]]  # exclude self (index 0 is x_k)
         
-        r_1 = np.linalg.norm(data[indices[k, K]] - data[indices[k, 0]])
-        r_2 = np.linalg.norm(data[indices[k, K + 1]] - data[indices[k, 0]])
-        r = (r_1 + r_2) / 2
-        
-        temp_data = neighbors
-        center = np.mean(temp_data, axis=0)
-        diff = temp_data - center
-        
-        # PCA instead of full covariance + eigh
+        # Estimate radius R using the K-th and (K+1)-th nearest neighbors
+        r1 = np.linalg.norm(data[indices[k, K]] - data[k])
+        r2 = np.linalg.norm(data[indices[k, K + 1]] - data[k])
+        R = (r1 + r2) / 2
+
+        center = np.mean(neighbors, axis=0)
+        diff = neighbors - center
+
         pca = PCA(n_components=p)
-        local_coords = pca.fit_transform(diff)
+        pca.fit(diff)
         eigenvalues = pca.explained_variance_
 
-        adjusted_norms = []
-        for d in range(1, p + 1):
-            expected = np.zeros(p)
-            expected[:d] = 1 / (d + 2)
-            realised = 1 / r ** 2 * eigenvalues + (3 * d + 4) / (d * (d + 4)) * np.sum(eigenvalues[d:])
-            realised[d:] = 0
-            adjusted_norms.append(np.linalg.norm(realised - expected) + 2 * np.sum(eigenvalues[d:]))
+        if len(eigenvalues) < p:
+            eigenvalues = np.pad(eigenvalues, (0, p - len(eigenvalues)))
 
-        dimensions[k] = np.argmin(adjusted_norms) + 1
-        # print(dimensions[k], norms)
-        
+        adjusted_errors = []
+        for q in range(1, p + 1):
+            curvature_term = (3 * q + 4) / (q * (q + 4)) * np.sum(eigenvalues[q:])
+            squared_error_sum = 0.0
+
+            for j in range(q):
+                realised = (eigenvalues[j] + curvature_term) / (R ** 2)
+                target = 1 / (q + 2)
+                squared_error_sum += (target - realised) ** 2
+
+            norm_error = np.sqrt(squared_error_sum)
+            penalty = 2 * np.sum(eigenvalues[q:]) / (R ** 2)
+            adjusted_errors.append(norm_error + penalty)
+
+        dimensions[k] = np.argmin(adjusted_errors) + 1  # +1 for 1-based indexing
+
     return np.mean(dimensions)
+
 
 class SphereSampler:
     def __init__(self, n=1500, d=2, p=3, R=1, sigma=0.0, seed=None):

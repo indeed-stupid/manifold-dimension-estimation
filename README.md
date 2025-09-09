@@ -26,7 +26,7 @@ The code implements various algorithms and tools for estimating the intrinsic di
 ## 📚 Related Publications
 
 1. **Manifold Dimension Estimation: An Empirical Study**  
-   *(Author list)*  
+   *Bi, Zelong and Pierre Lafaye de Micheaux*  
    [Link or DOI]
 
 2. **Beyond PCA: Two Curvature-Aware Manifold Dimension Estimators through Quadratic Embedding**  
